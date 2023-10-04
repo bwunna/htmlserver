@@ -1,4 +1,4 @@
-package server
+package Structures
 
 type Person struct {
 	Name string

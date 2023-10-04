@@ -1,7 +1,10 @@
 package main
 
-import "SimpleServer/server"
+import (
+	"SimpleServer/server"
+)
 
 func main() {
 	server.SetServer()
+
 }
