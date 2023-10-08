@@ -1,11 +1,11 @@
 package ServerStarter
 
 import (
-	"SimpleServer/Internal/App/Controllers/ServerAPI"
+	"SimpleServer/Internal/App/Controllers/Controller"
 	"time"
 )
 
 func StartServer() {
-	Server := ServerAPI.New("localhost:8080", nil)
+	Server := Controller.NewServer("localhost:8080", nil)
 	Server.Start(time.Minute, time.Minute*2, false)
 }
