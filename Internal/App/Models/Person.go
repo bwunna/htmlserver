@@ -1,4 +1,4 @@
-package Structures
+package Models
 
 type Person struct {
 	Name string

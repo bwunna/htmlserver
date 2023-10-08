@@ -1,10 +1,7 @@
 package main
 
-import (
-	"SimpleServer/server"
-)
+import "SimpleServer/Internal/App/Services/ServerStarter"
 
 func main() {
-	server.SetServer()
-
+	ServerStarter.StartServer()
 }
