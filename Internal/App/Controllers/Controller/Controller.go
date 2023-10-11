@@ -1,6 +1,7 @@
 package Controller
 
 import (
+	"SimpleServer/Internal/App/Providers/Provider"
 	"SimpleServer/Internal/App/Repositories/Cache_"
 	"encoding/json"
 	"errors"
@@ -20,7 +21,22 @@ func NewServer(address string, handler http.Handler) *Server {
 	newServer := &(Server{address: address, handler: handler})
 	return newServer
 }
-
+func (s *Server) AskForPromotion(writer http.ResponseWriter, request *http.Request) {
+	key, err := checkKey(request)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusConflict)
+		return
+	}
+	err = s.cache.AskForPromotion(key)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusConflict)
+		return
+	}
+	_, err = fmt.Fprintln(writer, "Congratulations! You've been promoted")
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusConflict)
+	}
+}
 func (s *Server) getPeople(writer http.ResponseWriter, request *http.Request) {
 	// checking for valid key
 	key, err := checkKey(request)
@@ -29,15 +45,23 @@ func (s *Server) getPeople(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	// checking if user exists
-	value, err := s.cache.Get(key)
+	userData, err := s.cache.Get(key)
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = json.NewEncoder(writer).Encode(value)
+
+	err = json.NewEncoder(writer).Encode(userData)
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
 	}
+	salaryData, err := s.cache.GetSalaryData(key)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(writer).Encode(salaryData)
 
 }
 
@@ -79,14 +103,14 @@ func checkKey(request *http.Request) (string, error) {
 
 }
 
-func (s *Server) Start(defaultExpiration time.Duration, cleanUpInterval time.Duration, endlessLifeTimeAvailability bool) {
+func (s *Server) Start(defaultExpiration time.Duration, cleanUpInterval time.Duration, endlessLifeTimeAvailability bool, db *Provider.DataBase, promotionInterval time.Duration) {
 	// starting server
-	s.cache = Cache_.NewCache(defaultExpiration, cleanUpInterval, endlessLifeTimeAvailability)
+	s.cache = Cache_.NewCache(defaultExpiration, cleanUpInterval, endlessLifeTimeAvailability, db, promotionInterval)
 	http.HandleFunc("/people", s.peopleHandler)
 	fmt.Println("http server is working ")
 	err := http.ListenAndServe(s.address, s.handler)
 	if err != nil {
-		panic("unable to connect to Controller")
+		panic("unable to connect to server")
 	}
 }
 
@@ -131,6 +155,8 @@ func (s *Server) peopleHandler(writer http.ResponseWriter, request *http.Request
 		s.postPeople(writer, request)
 	case http.MethodDelete:
 		s.deletePeople(writer, request)
+	case http.MethodPatch:
+		s.AskForPromotion(writer, request)
 	default:
 		http.Error(writer, "Undefined method", http.StatusMethodNotAllowed)
 	}
