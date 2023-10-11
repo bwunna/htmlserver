@@ -2,6 +2,7 @@ package Cache_
 
 import (
 	"SimpleServer/Internal/App/Models"
+	"SimpleServer/Internal/App/Providers/Provider"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +16,8 @@ type Cache struct {
 	defaultExpiration           time.Duration
 	cleanUpInterval             time.Duration
 	endlessLifeTimeAvailability bool
+	promotionInterval           time.Duration
+	db                          *Provider.DataBase
 }
 
 func (c *Cache) CheckForItem(key string) bool {
@@ -23,8 +26,18 @@ func (c *Cache) CheckForItem(key string) bool {
 	return ok
 }
 
+func (c *Cache) GetSalaryData(key string) (*Models.TableData, error) {
+	// returns data about employee salary
+	employeeInfo, err := c.db.GetEmployeeInfo(key)
+	if err != nil {
+		return nil, err
+	} else {
+		return employeeInfo, nil
+	}
+}
 func (c *Cache) clearItems(keys []string) {
 	c.Lock()
+
 	defer c.Unlock()
 	// clearing items by their keys
 	for _, key := range keys {
@@ -41,6 +54,12 @@ func (c *Cache) Delete(key string) error {
 		return fmt.Errorf("user %v was not found", key)
 	}
 	delete(c.items, key)
+	var keys []string
+	keys = append(keys, key)
+	err := c.db.Delete(keys)
+	if err != nil {
+		return err
+	}
 	// initializing map if it is nil
 	c.updateMap()
 
@@ -55,6 +74,10 @@ func (c *Cache) garbageCollector() {
 		// if expired items exist, delete them
 		if keys := c.expiredKeys(); len(keys) != 0 {
 			c.clearItems(keys)
+			err := c.db.Delete(keys)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
 		}
 	}
 
@@ -78,6 +101,21 @@ func (c *Cache) Get(key string) (interface{}, error) {
 
 }
 
+func (c *Cache) AskForPromotion(key string) error {
+	if value, ok := c.items[key]; !ok {
+		return fmt.Errorf("error: user not found")
+	} else {
+		if value.Created.Add(c.promotionInterval).Compare(time.Now()) == 1 {
+
+			return fmt.Errorf("error: you need to work more")
+		} else {
+			err := c.db.AskForPromotion(key)
+			return err
+		}
+	}
+
+}
+
 func (c *Cache) expiredKeys() (keys []string) {
 	c.RLock()
 	defer c.RUnlock()
@@ -93,7 +131,7 @@ func (c *Cache) expiredKeys() (keys []string) {
 
 	return
 }
-func NewCache(defaultExpiration, cleanupInterval time.Duration, endlessLifeTimeAvailability bool) *Cache {
+func NewCache(defaultExpiration, cleanupInterval time.Duration, endlessLifeTimeAvailability bool, db *Provider.DataBase, promotionInterval time.Duration) *Cache {
 
 	// initializing map
 	items := make(map[string]Models.Item)
@@ -103,6 +141,8 @@ func NewCache(defaultExpiration, cleanupInterval time.Duration, endlessLifeTimeA
 		defaultExpiration:           defaultExpiration,
 		cleanUpInterval:             cleanupInterval,
 		endlessLifeTimeAvailability: endlessLifeTimeAvailability,
+		db:                          db,
+		promotionInterval:           promotionInterval,
 	}
 
 	// starting gc
@@ -144,7 +184,10 @@ func (c *Cache) Set(person *Models.Person, duration time.Duration) error {
 	if duration > 0 {
 		expiration = time.Now().Add(duration)
 	}
-
+	err := c.db.Insert(person.Name)
+	if err != nil {
+		panic(err.Error())
+	}
 	c.items[key] = Models.Item{Value: person, Created: time.Now(), Expiration: expiration, EndlessLifeTime: endlessLifeTime}
 
 	return nil
