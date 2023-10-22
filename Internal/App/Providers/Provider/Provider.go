@@ -2,17 +2,17 @@ package Provider
 
 import (
 	"SimpleServer/Internal/App/Models"
-	"SimpleServer/Internal/pkg/SupportingFunctions"
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
+	"strings"
 )
 
 type DataBase struct {
 	db *sql.DB
 }
 
-func NewDataBase(host, user, password, nameOfDB, driverName string, port int) (*DataBase, error) {
+func NewDB(host, user, password, nameOfDB, driverName string, port int) (*DataBase, error) {
 	// constructor for DataBase struct
 	params := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, nameOfDB)
 	if result, err := sql.Open(driverName, params); err != nil {
@@ -42,7 +42,7 @@ func (base *DataBase) Insert(key string) error {
 
 func (base *DataBase) Delete(keys []string) error {
 	// delete from db using where in(names...)
-	keysInOneString := SupportingFunctions.KeysInString(keys)
+	keysInOneString := strings.Join(keys, ", ")
 	queryString := fmt.Sprintf("DELETE FROM public.workers WHERE user_name in (%s);", keysInOneString)
 	fmt.Println(queryString)
 	if _, err := base.db.Query(queryString); err != nil {

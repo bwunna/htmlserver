@@ -1,10 +1,9 @@
-package Cache_
+package Cache
 
 import (
 	"SimpleServer/Internal/App/Models"
 	"SimpleServer/Internal/App/Providers/Provider"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -186,7 +185,7 @@ func (c *Cache) Set(person *Models.Person, duration time.Duration) error {
 	}
 	err := c.db.Insert(person.Name)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 	c.items[key] = Models.Item{Value: person, Created: time.Now(), Expiration: expiration, EndlessLifeTime: endlessLifeTime}
 
@@ -201,7 +200,7 @@ func (c *Cache) Update(person *Models.Person) error {
 	// updates info about user
 	if !ok {
 		c.Unlock()
-		return errors.New("couldn't find the user")
+		return fmt.Errorf("couldn't find the user")
 		// if user was not found, return error
 	} else {
 		if user, ok := value.Value.(*Models.Person); ok {
