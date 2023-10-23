@@ -1,8 +1,8 @@
 package Controller
 
 import (
-	"SimpleServer/Internal/App/Providers/Provider"
-	"SimpleServer/Internal/App/Repositories/Cache"
+	"SimpleServer/internal/App/Providers/Provider"
+	"SimpleServer/internal/App/Repositories/Cache"
 	"encoding/json"
 	"errors"
 	"fmt"

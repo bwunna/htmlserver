@@ -1,7 +1,7 @@
 package main
 
 import (
-	"SimpleServer/Internal/App/Services/ServerStarter"
+	"SimpleServer/internal/App/Services/ServerStarter"
 	"log"
 )
 

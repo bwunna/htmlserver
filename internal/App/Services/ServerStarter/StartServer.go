@@ -1,8 +1,8 @@
 package ServerStarter
 
 import (
-	"SimpleServer/Internal/App/Controllers/Controller"
-	"SimpleServer/Internal/App/Providers/Provider"
+	"SimpleServer/internal/App/Controllers/Controller"
+	"SimpleServer/internal/App/Providers/Provider"
 	"time"
 )
 

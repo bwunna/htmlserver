@@ -1,8 +1,8 @@
 package Cache
 
 import (
-	"SimpleServer/Internal/App/Models"
-	"SimpleServer/Internal/App/Providers/Provider"
+	"SimpleServer/internal/App/Models"
+	"SimpleServer/internal/App/Providers/Provider"
 	"encoding/json"
 	"fmt"
 	"sync"

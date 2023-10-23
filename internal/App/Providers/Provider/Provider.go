@@ -1,7 +1,7 @@
 package Provider
 
 import (
-	"SimpleServer/Internal/App/Models"
+	"SimpleServer/internal/App/Models"
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
