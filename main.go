@@ -1,12 +1,12 @@
 package main
 
 import (
-	"SimpleServer/internal/App/Services/ServerStarter"
+	"SimpleServer/internal/app/services/serverStarter"
 	"log"
 )
 
 func main() {
-	err := ServerStarter.StartServer()
+	err := serverStarter.StartServer()
 	if err != nil {
 		log.Fatal(err.Error())
 	}

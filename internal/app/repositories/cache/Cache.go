@@ -1,8 +1,8 @@
-package Cache
+package cache
 
 import (
-	"SimpleServer/internal/App/Models"
-	"SimpleServer/internal/App/Providers/Provider"
+	"SimpleServer/internal/app/providers/Provider"
+	"SimpleServer/internal/models"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -11,7 +11,7 @@ import (
 
 type Cache struct {
 	sync.RWMutex
-	items                       map[string]Models.Item
+	items                       map[string]*models.Item
 	defaultExpiration           time.Duration
 	cleanUpInterval             time.Duration
 	endlessLifeTimeAvailability bool
@@ -25,7 +25,7 @@ func (c *Cache) CheckForItem(key string) bool {
 	return ok
 }
 
-func (c *Cache) GetSalaryData(key string) (*Models.TableData, error) {
+func (c *Cache) GetSalaryData(key string) (*models.TableData, error) {
 	// returns data about employee salary
 	employeeInfo, err := c.db.GetEmployeeInfo(key)
 	if err != nil {
@@ -82,7 +82,7 @@ func (c *Cache) garbageCollector() {
 
 }
 
-func (c *Cache) Get(key string) (interface{}, error) {
+func (c *Cache) Get(key string) (*models.Item, error) {
 	c.RLock()
 	defer c.RUnlock()
 	item, ok := c.items[key]
@@ -133,7 +133,7 @@ func (c *Cache) expiredKeys() (keys []string) {
 func NewCache(defaultExpiration, cleanupInterval time.Duration, endlessLifeTimeAvailability bool, db *Provider.DataBase, promotionInterval time.Duration) *Cache {
 
 	// initializing map
-	items := make(map[string]Models.Item)
+	items := make(map[string]*models.Item)
 	cache := Cache{
 
 		items:                       items,
@@ -150,8 +150,8 @@ func NewCache(defaultExpiration, cleanupInterval time.Duration, endlessLifeTimeA
 	return &cache
 }
 
-func (c *Cache) ParseJson(decoder *json.Decoder) (*Models.Person, error) {
-	var person Models.Person
+func (c *Cache) ParseJson(decoder *json.Decoder) (*models.User, error) {
+	var person models.User
 	err := decoder.Decode(&person)
 	fmt.Println(person)
 	if err != nil {
@@ -161,13 +161,13 @@ func (c *Cache) ParseJson(decoder *json.Decoder) (*Models.Person, error) {
 	return &person, nil
 }
 
-func (c *Cache) Set(person *Models.Person, duration time.Duration) error {
+func (c *Cache) Set(user *models.User, duration time.Duration) error {
 	var expiration time.Time
 	var endlessLifeTime bool
 
 	c.Lock()
 	defer c.Unlock()
-	key := person.Name
+	key := user.Name
 	if _, ok := c.items[key]; ok {
 		return fmt.Errorf("user with name %v is not unique", key)
 	}
@@ -183,19 +183,19 @@ func (c *Cache) Set(person *Models.Person, duration time.Duration) error {
 	if duration > 0 {
 		expiration = time.Now().Add(duration)
 	}
-	err := c.db.Insert(person.Name)
+	err := c.db.Insert(user.Name)
 	if err != nil {
 		return err
 	}
-	c.items[key] = Models.Item{Value: person, Created: time.Now(), Expiration: expiration, EndlessLifeTime: endlessLifeTime}
+	c.items[key] = &models.Item{Value: user, Created: time.Now(), Expiration: expiration, EndlessLifeTime: endlessLifeTime}
 
 	return nil
 }
 
-func (c *Cache) Update(person *Models.Person) error {
+func (c *Cache) Update(user *models.User) error {
 	c.Lock()
 	defer c.Unlock()
-	key := person.Name
+	key := user.Name
 	value, ok := c.items[key]
 	// updates info about user
 	if !ok {
@@ -203,9 +203,9 @@ func (c *Cache) Update(person *Models.Person) error {
 		return fmt.Errorf("couldn't find the user")
 		// if user was not found, return error
 	} else {
-		if user, ok := value.Value.(*Models.Person); ok {
-			user.Age = person.Age
-			user.Sex = person.Sex
+		if user, ok := value.Value.(*models.User); ok {
+			user.Age = user.Age
+			user.Sex = user.Sex
 		} else {
 			return fmt.Errorf("couldn't post this type")
 		}
@@ -217,6 +217,6 @@ func (c *Cache) Update(person *Models.Person) error {
 // updating map if it's nil
 func (c *Cache) updateMap() {
 	if c.items == nil {
-		c.items = make(map[string]Models.Item)
+		c.items = make(map[string]*models.Item)
 	}
 }

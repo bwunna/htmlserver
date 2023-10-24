@@ -1,8 +1,8 @@
-package Controller
+package controller
 
 import (
-	"SimpleServer/internal/App/Providers/Provider"
-	"SimpleServer/internal/App/Repositories/Cache"
+	"SimpleServer/internal/app/providers/Provider"
+	"SimpleServer/internal/app/repositories/cache"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,7 +11,7 @@ import (
 )
 
 type Server struct {
-	cache   *Cache.Cache
+	cache   *cache.Cache
 	handler http.Handler
 	address string
 }
@@ -109,7 +109,7 @@ func checkKey(request *http.Request) (string, error) {
 
 func (s *Server) Start(defaultExpiration time.Duration, cleanUpInterval time.Duration, endlessLifeTimeAvailability bool, db *Provider.DataBase, promotionInterval time.Duration) error {
 	// starting server
-	s.cache = Cache.NewCache(defaultExpiration, cleanUpInterval, endlessLifeTimeAvailability, db, promotionInterval)
+	s.cache = cache.NewCache(defaultExpiration, cleanUpInterval, endlessLifeTimeAvailability, db, promotionInterval)
 	http.HandleFunc("/people", s.peopleHandler)
 	fmt.Println("http server is working ")
 	err := http.ListenAndServe(s.address, s.handler)

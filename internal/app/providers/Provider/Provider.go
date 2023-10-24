@@ -1,7 +1,7 @@
 package Provider
 
 import (
-	"SimpleServer/internal/App/Models"
+	"SimpleServer/internal/app/models"
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
@@ -52,7 +52,7 @@ func (base *DataBase) Delete(keys []string) error {
 
 }
 
-func (base *DataBase) GetEmployeeInfo(key string) (*Models.TableData, error) {
+func (base *DataBase) GetEmployeeInfo(key string) (*models.TableData, error) {
 	//get information about salary
 	row, err := base.db.Query("SELECT user_name, current_status, salary, employment_time FROM public.workers" +
 		fmt.Sprintf(" where user_name = '%s';", key))
@@ -60,7 +60,7 @@ func (base *DataBase) GetEmployeeInfo(key string) (*Models.TableData, error) {
 		return nil, err
 	}
 
-	var employee Models.TableData = Models.TableData{}
+	var employee models.TableData = models.TableData{}
 	for row.Next() {
 		err = row.Scan(&employee.Name, &employee.Status, &employee.Salary, &employee.EmploymentTime)
 		if err != nil {

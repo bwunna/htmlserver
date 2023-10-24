@@ -1,13 +1,13 @@
-package ServerStarter
+package serverStarter
 
 import (
-	"SimpleServer/internal/App/Controllers/Controller"
-	"SimpleServer/internal/App/Providers/Provider"
+	"SimpleServer/internal/app/controllers/controller"
+	"SimpleServer/internal/app/providers/Provider"
 	"time"
 )
 
 func StartServer() error {
-	Server := Controller.NewServer("localhost:8080", nil)
+	Server := controller.NewServer("localhost:8080", nil)
 	db, err := Provider.NewDB("localhost", "postgres", "9340fk3__132AA@", "company", "postgres", 5432)
 	if err != nil {
 		return err
