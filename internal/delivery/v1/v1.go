@@ -2,7 +2,6 @@ package v1
 
 import (
 	"SimpleServer/internal/controller"
-	"SimpleServer/internal/models"
 	"SimpleServer/pkg/usersService"
 	"context"
 )
@@ -57,7 +56,7 @@ func (s GrpcServer) DeleteUserByName(_ context.Context, request *usersService.Us
 func (s GrpcServer) AddUser(_ context.Context, user *usersService.User) (*usersService.BasicResponse, error) {
 	// adding user
 	basicResponse := &usersService.BasicResponse{}
-	err := s.cnt.AddUser(models.ConvertGrpcUserToModelsUser(user))
+	err := s.cnt.AddUser(user)
 	if err != nil {
 		return basicResponse, nil
 	}
