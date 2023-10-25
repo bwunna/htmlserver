@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+option go_package = "./usersService";
+
+
+message BasicResponse {
+
+}
+message EmployeeInfo{
+  string info = 1;
+}
+message UserByNameRequest{
+  string name = 1;
+}
+message any{
+
+}
+message BasicRequest{
+
+}
+
+message User{
+  string name = 1;
+  uint32 age = 2;
+  bool sex = 3;
+  string company = 4;
+  map<string, any> skills = 5;
+}
+service UserCenter{
+  // CreateUser
+  rpc AddUser(User) returns (BasicResponse);
+  // GetUserByID
+  rpc GetUserByName(UserByNameRequest) returns (EmployeeInfo);
+  rpc DeleteUserByName(UserByNameRequest) returns (BasicResponse);
+  // UpdateSalary
+  rpc UpdateSalary(UserByNameRequest) returns (BasicResponse);
+}

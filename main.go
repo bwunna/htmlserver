@@ -1,7 +1,17 @@
 package main
 
-import "SimpleServer/server"
+import (
+	"SimpleServer/internal/delivery"
+	"fmt"
+	"log"
+)
 
 func main() {
-	server.SetServer()
+	fmt.Println("server is working")
+	err := delivery.RunGRPCServer()
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 }
