@@ -1,17 +1,17 @@
 package main
 
 import (
-	"SimpleServer/pkg/usersService"
+	"SimpleServer/internal/delivery"
 	"fmt"
+	"log"
 )
 
-func govnoed(server usersService.UserCenterServer) {
-	fmt.Println("pidoras")
-}
 func main() {
-	/*	err := serverStarter.StartServer()
-		if err != nil {
-			log.Fatal(err.Error())
-		}*/
+	fmt.Println("server is working")
+	err := delivery.RunGRPCServer()
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
 }
