@@ -1,20 +1,15 @@
 package delivery
 
 import (
+	"SimpleServer/internal/controller"
 	v1 "SimpleServer/internal/delivery/v1"
 	"SimpleServer/internal/providers/cache"
 	"SimpleServer/internal/providers/db"
 	"SimpleServer/pkg/usersService"
-	"fmt"
 	"google.golang.org/grpc"
 	"net"
 	"time"
 )
-
-// В данном файле должна быть структура данного сервиса
-// КОНСТРУКТОР
-// фукнция запуска сервиса
-//
 
 const (
 	host       = "localhost"
@@ -26,13 +21,15 @@ const (
 )
 
 func RunGRPCServer() error {
+
+	// configuration for server
 	dataBase, err := db.NewDB(host, user, password, dbName, driverName, port)
 	if err != nil {
-		return fmt.Errorf("бд")
+		return err
 	}
 	newCache := cache.NewCache(time.Minute*10, time.Minute*2, false, dataBase, time.Minute*2)
-	server := v1.NewGrpcServer(newCache)
-
+	newController := controller.NewController(newCache)
+	server := v1.NewGrpcServer(newController)
 	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		return err
@@ -42,12 +39,7 @@ func RunGRPCServer() error {
 
 	err = grpcSrv.Serve(lis)
 	if err != nil {
-		return fmt.Errorf("сёрв")
+		return err
 	}
 	return nil
 }
-
-//func CreateAndRunUserCenter(address string, defaultExpiration time.Duration, cleanUpInterval time.Duration, endlessLifeTimeAvailability bool, db *Provider.DataBase, promotionInterval time.Duration) *v1.Server {
-//	return nil
-//
-//}
