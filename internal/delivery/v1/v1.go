@@ -88,19 +88,6 @@ func (s GrpcServer) DeleteUserByName(_ context.Context, request *usersService.Us
 
 }
 
-/*func (s *Server) Start(defaultExpiration time.Duration, cleanUpInterval time.Duration, endlessLifeTimeAvailability bool, db *Provider.DataBase, promotionInterval time.Duration) error {
-	// starting server
-	s.cache = cache.NewCache(defaultExpiration, cleanUpInterval, endlessLifeTimeAvailability, db, promotionInterval)
-	http.HandleFunc("/people", s.peopleHandler)
-	fmt.Println("http server is working ")
-	err := http.ListenAndServe(s.address, s.handler)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}*/
-
 func (s GrpcServer) AddUser(_ context.Context, user *usersService.User) (*usersService.BasicResponse, error) {
 	// checking for successful decoding person from json
 	//fmt.Println(request.Body)
