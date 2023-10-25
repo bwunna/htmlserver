@@ -26,7 +26,6 @@ message User{
   string company = 4;
   map<string, any> skills = 5;
 }
-
 service UserCenter{
   // CreateUser
   rpc AddUser(User) returns (BasicResponse);
