@@ -78,7 +78,6 @@ func (s GrpcServer) GetUserByName(_ context.Context, request *usersService.UserB
 
 func (s GrpcServer) DeleteUserByName(_ context.Context, request *usersService.UserByNameRequest) (*usersService.BasicResponse, error) {
 	// checking for valid key
-
 	err := s.cache.Delete(request.Name)
 	// checking for successful deleting
 	basicResponse := &usersService.BasicResponse{}
