@@ -104,10 +104,10 @@ func (c *Cache) AskForPromotion(key string) error {
 	if value, ok := c.items[key]; !ok {
 		return fmt.Errorf("error: user not found")
 	} else {
-		if value.Created.Add(c.promotionInterval).Compare(time.Now()) == 1 {
-
+		if value.TimeOfLastPromotion.Add(c.promotionInterval).Compare(time.Now()) == 1 {
 			return fmt.Errorf("error: you need to work more")
 		} else {
+			value.TimeOfLastPromotion = time.Now()
 			err := c.db.AskForPromotion(key)
 			return err
 		}
@@ -187,7 +187,7 @@ func (c *Cache) Set(user *models.User, duration time.Duration) error {
 	if err != nil {
 		return err
 	}
-	c.items[key] = &models.Item{Value: user, Created: time.Now(), Expiration: expiration, EndlessLifeTime: endlessLifeTime}
+	c.items[key] = &models.Item{Value: user, Created: time.Now(), Expiration: expiration, EndlessLifeTime: endlessLifeTime, TimeOfLastPromotion: time.Now()}
 
 	return nil
 }
