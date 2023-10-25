@@ -4,20 +4,25 @@ option go_package = "./usersService";
 
 
 message BasicResponse {
-
+  string message = 1;
 }
+
+
 message EmployeeInfo{
   string info = 1;
 }
+
+
 message UserByNameRequest{
   string name = 1;
 }
+
+
+// for map skills
 message any{
 
 }
-message BasicRequest{
 
-}
 
 message User{
   string name = 1;
@@ -26,12 +31,11 @@ message User{
   string company = 4;
   map<string, any> skills = 5;
 }
+
+
 service UserCenter{
-  // CreateUser
   rpc AddUser(User) returns (BasicResponse);
-  // GetUserByID
   rpc GetUserByName(UserByNameRequest) returns (EmployeeInfo);
   rpc DeleteUserByName(UserByNameRequest) returns (BasicResponse);
-  // UpdateSalary
   rpc UpdateSalary(UserByNameRequest) returns (BasicResponse);
 }
