@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
-	"strings"
 )
 
 type DataBase struct {
@@ -41,14 +40,26 @@ func (base *DataBase) Insert(key string) error {
 
 func (base *DataBase) Delete(keys []string) error {
 	// delete from db using where in(names...)
-	keysInOneString := strings.Join(keys, ", ")
+	keysInOneString := KeysInString(keys)
 	queryString := fmt.Sprintf("DELETE FROM public.workers WHERE user_name in (%s);", keysInOneString)
 	fmt.Println(queryString)
 	if _, err := base.db.Query(queryString); err != nil {
+		fmt.Println(err.Error())
 		return err
 	}
 	return nil
 
+}
+func KeysInString(keys []string) string {
+	var answer string
+	for _, value := range keys {
+		answer += "'" + value + "', "
+	}
+	if len(answer) > 2 {
+		answer = answer[:len(answer)-2]
+	}
+	fmt.Println(answer)
+	return answer
 }
 
 func (base *DataBase) GetEmployeeInfo(key string) (*TableData, error) {
