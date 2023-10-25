@@ -42,7 +42,6 @@ func (base *DataBase) Delete(keys []string) error {
 	// delete from db using where in(names...)
 	keysInOneString := KeysInString(keys)
 	queryString := fmt.Sprintf("DELETE FROM public.workers WHERE user_name in (%s);", keysInOneString)
-	fmt.Println(queryString)
 	if _, err := base.db.Query(queryString); err != nil {
 		fmt.Println(err.Error())
 		return err
