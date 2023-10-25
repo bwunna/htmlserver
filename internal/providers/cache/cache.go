@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"SimpleServer/internal/app/providers/Provider"
 	"SimpleServer/internal/models"
 	"SimpleServer/internal/providers/db"
 	"encoding/json"
@@ -17,7 +16,7 @@ type Cache struct {
 	cleanUpInterval             time.Duration
 	endlessLifeTimeAvailability bool
 	promotionInterval           time.Duration
-	db                          *Provider.DataBase
+	db                          *db.DataBase
 }
 
 func (c *Cache) CheckForItem(key string) bool {
@@ -131,7 +130,7 @@ func (c *Cache) expiredKeys() (keys []string) {
 
 	return
 }
-func NewCache(defaultExpiration, cleanupInterval time.Duration, endlessLifeTimeAvailability bool, db *Provider.DataBase, promotionInterval time.Duration) *Cache {
+func NewCache(defaultExpiration, cleanupInterval time.Duration, endlessLifeTimeAvailability bool, db *db.DataBase, promotionInterval time.Duration) *Cache {
 
 	// initializing map
 	items := make(map[string]*models.Item)
