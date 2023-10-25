@@ -3,6 +3,7 @@ package controller
 import (
 	"SimpleServer/internal/models"
 	"SimpleServer/internal/providers/cache"
+	"SimpleServer/pkg/usersService"
 	"fmt"
 	"time"
 )
@@ -54,12 +55,13 @@ func (c *Controller) DeleteUser(name string) error {
 
 }
 
-func (c *Controller) AddUser(user *models.User) error {
+func (c *Controller) AddUser(user *usersService.User) error {
 	// trying to add user to cache or update info about him
-	err := c.cache.Set(user, time.Minute*10)
+	userToAdd := models.ConvertGrpcUserToModelsUser(user)
+	err := c.cache.Set(userToAdd, time.Minute*10)
 	if err != nil {
 		// checking for errors while adding the user
-		if err = c.cache.Update(user); err != nil {
+		if err = c.cache.Update(userToAdd); err != nil {
 			return err
 		}
 	}
