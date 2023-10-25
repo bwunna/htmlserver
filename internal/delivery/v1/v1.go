@@ -1,8 +1,8 @@
 package v1
 
 import (
-	"SimpleServer/internal/app/repositories/cache"
 	"SimpleServer/internal/models"
+	"SimpleServer/internal/providers/cache"
 	"SimpleServer/pkg/usersService"
 	"context"
 	"fmt"
@@ -29,19 +29,25 @@ import (
 // return &grpcserver.BasicResponse{} , nil
 
 // }
-type Server struct {
-	address string
-	cache   *cache.Cache
+//type Server struct {
+//	address string
+//	cache   *cache.Cache
+//}
+//*cache
+//func NewServer(address string) *Server {
+//	// new server
+//	return &Server{address: address}
+//}
+
+type GrpcServer struct {
+	cache *cache.Cache
 }
 
-func NewServer(address string) *Server {
-	// new server
-	return &Server{address: address}
+func NewGrpcServer(cache *cache.Cache) *GrpcServer {
+	return &GrpcServer{cache: cache}
 }
-func (s *Server) mustEmbedUnimplementedUserCenterServer() {
 
-}
-func (s *Server) UpdateSalary(_ context.Context, request *usersService.UserByNameRequest) (*usersService.BasicResponse, error) {
+func (s GrpcServer) UpdateSalary(_ context.Context, request *usersService.UserByNameRequest) (*usersService.BasicResponse, error) {
 
 	err := s.cache.AskForPromotion(request.Name)
 	if err != nil {
@@ -54,7 +60,7 @@ func (s *Server) UpdateSalary(_ context.Context, request *usersService.UserByNam
 	}*/
 }
 
-func (s *Server) GetUserByName(_ context.Context, request *usersService.UserByNameRequest) (*usersService.EmployeeInfo, error) {
+func (s GrpcServer) GetUserByName(_ context.Context, request *usersService.UserByNameRequest) (*usersService.EmployeeInfo, error) {
 	// checking if user exists
 	empInfo := &usersService.EmployeeInfo{Info: ""}
 	userData, err := s.cache.Get(request.Name)
@@ -70,7 +76,7 @@ func (s *Server) GetUserByName(_ context.Context, request *usersService.UserByNa
 	return empInfo, nil
 }
 
-func (s *Server) DeleteUserByName(_ context.Context, request *usersService.UserByNameRequest) (*usersService.BasicResponse, error) {
+func (s GrpcServer) DeleteUserByName(_ context.Context, request *usersService.UserByNameRequest) (*usersService.BasicResponse, error) {
 	// checking for valid key
 	err := s.cache.Delete(request.Name)
 	// checking for successful deleting
@@ -95,12 +101,12 @@ func (s *Server) DeleteUserByName(_ context.Context, request *usersService.UserB
 	return nil
 }*/
 
-func (s *Server) AddUser(_ context.Context, user *usersService.User) (*usersService.BasicResponse, error) {
+func (s GrpcServer) AddUser(_ context.Context, user *usersService.User) (*usersService.BasicResponse, error) {
 	// checking for successful decoding person from json
 	//fmt.Println(request.Body)
 	validUser := models.ConvertUserFromGrpcPersonToModelsPerson(user)
 	basicResponse := &usersService.BasicResponse{}
-	err := s.cache.Set(validUser, time.Minute*2)
+	err := s.cache.Set(validUser, time.Minute*10)
 	//fmt.Println(request.Body)
 	if err != nil {
 		// checking for errors while adding the user
