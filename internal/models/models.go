@@ -5,15 +5,11 @@ import "time"
 // Structures for all project
 
 type Item struct {
-	Value               interface{}
-	Created             time.Time
-	Expiration          time.Time
-	EndlessLifeTime     bool
-	TimeOfLastPromotion time.Time
+	Created    time.Time
+	Expiration time.Time
 }
 
-type User struct {
-	Name string
-	Age  int
-	Sex  bool
+type EmployeeInfo struct {
+	Name, Email, CompanyName, DepartmentName, Status string
+	Salary                                           int32
 }
