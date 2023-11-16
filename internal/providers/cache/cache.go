@@ -3,59 +3,64 @@ package cache
 import (
 	"SimpleServer/internal/models"
 	"SimpleServer/internal/providers/db"
-	"encoding/json"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 )
 
 type Cache struct {
 	sync.RWMutex
-	items                       map[string]*models.Item
-	defaultExpiration           time.Duration
-	cleanUpInterval             time.Duration
-	endlessLifeTimeAvailability bool
-	promotionInterval           time.Duration
-	db                          *db.DataBase
+	items             map[string]*models.Item
+	defaultExpiration time.Duration
+	cleanUpInterval   time.Duration
+	db                *db.DataBase
 }
 
-func (c *Cache) CheckForItem(key string) bool {
-	_, ok := c.items[key]
+// constructor for cache
 
-	return ok
-}
+func NewCache(defaultExpiration, cleanupInterval time.Duration, db *db.DataBase) *Cache {
 
-func (c *Cache) GetSalaryData(key string) (*db.TableData, error) {
-	// returns data about employee salary
-	employeeInfo, err := c.db.GetEmployeeInfo(key)
-	if err != nil {
-		return nil, err
-	} else {
-		return employeeInfo, nil
+	// initializing map
+	items := make(map[string]*models.Item)
+	cache := Cache{
+
+		items:             items,
+		defaultExpiration: defaultExpiration,
+		cleanUpInterval:   cleanupInterval,
+		db:                db,
 	}
+
+	// starting gc
+	go cache.garbageCollector()
+
+	return &cache
 }
+
+// deleting items from cache
+
 func (c *Cache) clearItems(keys []string) {
 	c.Lock()
 
 	defer c.Unlock()
-	// clearing items by their keys
 	for _, key := range keys {
 		delete(c.items, key)
 	}
 
 }
 
-func (c *Cache) Delete(key string) error {
+// deleting employee from cache and db
+
+func (c *Cache) DeleteByEmail(email string) error {
 	c.Lock()
 	defer c.Unlock()
-	// return error if item was not found
-	if _, ok := c.items[key]; !ok {
-		return fmt.Errorf("user %v was not found", key)
+	if _, ok := c.items[email]; !ok {
+		return fmt.Errorf("user %v was not found", email)
 	}
-	delete(c.items, key)
+	delete(c.items, email)
 	var keys []string
-	keys = append(keys, key)
-	err := c.db.Delete(keys)
+	keys = append(keys, email)
+	err := c.db.DeleteByEmail(keys)
 	if err != nil {
 		return err
 	}
@@ -65,6 +70,8 @@ func (c *Cache) Delete(key string) error {
 	return nil
 }
 
+// controller for gc
+
 func (c *Cache) garbageCollector() {
 	<-time.After(c.cleanUpInterval)
 	for {
@@ -73,7 +80,7 @@ func (c *Cache) garbageCollector() {
 		// if expired items exist, delete them
 		if keys := c.expiredKeys(); len(keys) != 0 {
 			c.clearItems(keys)
-			err := c.db.Delete(keys)
+			err := c.db.DeleteByEmail(keys)
 			if err != nil {
 				fmt.Println(err.Error())
 			}
@@ -82,38 +89,29 @@ func (c *Cache) garbageCollector() {
 
 }
 
-func (c *Cache) Get(key string) (*models.Item, error) {
+// sending request to db to get information about employee
+
+func (c *Cache) GetEmployeeInfoByEmail(email string) (*models.EmployeeInfo, error) {
 	c.RLock()
 	defer c.RUnlock()
-	item, ok := c.items[key]
+	item, ok := c.items[email]
 	//  if item was not found
 	if !ok {
-		return nil, fmt.Errorf("user with key %v was not found", key)
+		return nil, fmt.Errorf("user with email %v was not found", email)
 
 	}
 	//  if item is expired
-	if !item.EndlessLifeTime && time.Now().Compare(item.Expiration) == 1 {
-		return nil, fmt.Errorf("user with key %v is not available", key)
+	if time.Now().Compare(item.Expiration) == 1 {
+		return nil, fmt.Errorf("user with email %v is not available", email)
 	}
 
-	return item, nil
+	info, err := c.db.GetEmployeeInfoByEmail(email)
+
+	return info, err
 
 }
 
-func (c *Cache) AskForPromotion(key string) error {
-	if value, ok := c.items[key]; !ok {
-		return fmt.Errorf("error: user not found")
-	} else {
-		if value.TimeOfLastPromotion.Add(c.promotionInterval).Compare(time.Now()) == 1 {
-			return fmt.Errorf("error: you need to work more")
-		} else {
-			value.TimeOfLastPromotion = time.Now()
-			err := c.db.AskForPromotion(key)
-			return err
-		}
-	}
-
-}
+// finding expired items
 
 func (c *Cache) expiredKeys() (keys []string) {
 	c.RLock()
@@ -121,7 +119,7 @@ func (c *Cache) expiredKeys() (keys []string) {
 	// checking for expired items in cache
 	for key, value := range c.items {
 
-		if !value.EndlessLifeTime && time.Now().Compare(value.Expiration) == 1 {
+		if time.Now().Compare(value.Expiration) == 1 {
 			keys = append(keys, key)
 
 		}
@@ -130,88 +128,42 @@ func (c *Cache) expiredKeys() (keys []string) {
 
 	return
 }
-func NewCache(defaultExpiration, cleanupInterval time.Duration, endlessLifeTimeAvailability bool, db *db.DataBase, promotionInterval time.Duration) *Cache {
 
-	// initializing map
-	items := make(map[string]*models.Item)
-	cache := Cache{
+// adding in cache and db
 
-		items:                       items,
-		defaultExpiration:           defaultExpiration,
-		cleanUpInterval:             cleanupInterval,
-		endlessLifeTimeAvailability: endlessLifeTimeAvailability,
-		db:                          db,
-		promotionInterval:           promotionInterval,
-	}
-
-	// starting gc
-	go cache.garbageCollector()
-
-	return &cache
-}
-
-func (c *Cache) ParseJson(decoder *json.Decoder) (*models.User, error) {
-	var person models.User
-	err := decoder.Decode(&person)
-	fmt.Println(person)
-	if err != nil {
-		return nil, fmt.Errorf("error: invalid json file")
-	}
-
-	return &person, nil
-}
-
-func (c *Cache) Set(user *models.User, duration time.Duration) error {
-	var expiration time.Time
-	var endlessLifeTime bool
-
+func (c *Cache) Set(info *models.EmployeeInfo) error {
 	c.Lock()
-	defer c.Unlock()
-	key := user.Name
+
+	key := info.Email
 	if _, ok := c.items[key]; ok {
-		return fmt.Errorf("user with name %v is not unique", key)
+		c.Unlock()
+		return c.update(info)
 	}
-	// checking for endless lifetime availability for item from this cache
-	if duration == 0 {
-		if c.endlessLifeTimeAvailability {
-			endlessLifeTime = true
-		} else {
-			duration = c.defaultExpiration
-		}
-	}
-	// counting expiration for this item
-	if duration > 0 {
-		expiration = time.Now().Add(duration)
-	}
-	err := c.db.Insert(user.Name)
+
+	err := c.db.InsertEmployee(*info)
 	if err != nil {
 		return err
 	}
-	c.items[key] = &models.Item{Value: user, Created: time.Now(), Expiration: expiration, EndlessLifeTime: endlessLifeTime, TimeOfLastPromotion: time.Now()}
+	c.items[key] = &models.Item{Created: time.Now(), Expiration: time.Now().Add(c.defaultExpiration)}
+	c.Unlock()
 
 	return nil
 }
 
-func (c *Cache) Update(user *models.User) error {
+// sending request to db to update employee info
+
+func (c *Cache) update(info *models.EmployeeInfo) error {
 	c.Lock()
 	defer c.Unlock()
-	key := user.Name
-	value, ok := c.items[key]
-	// updates info about user
+	key := info.Email
+	_, ok := c.items[key]
+	// updates info about info
 	if !ok {
-		c.Unlock()
-		return fmt.Errorf("couldn't find the user")
-		// if user was not found, return error
-	} else {
-		if user, ok := value.Value.(*models.User); ok {
-			user.Age = user.Age
-			user.Sex = user.Sex
-		} else {
-			return fmt.Errorf("couldn't post this type")
-		}
+		defer log.Fatal("internal error")
+		return fmt.Errorf("internal error")
 	}
+	return c.db.UpdateEmployeeInfo(info)
 
-	return nil
 }
 
 // updating map if it's nil
