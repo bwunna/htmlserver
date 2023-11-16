@@ -2,11 +2,14 @@ package delivery
 
 import (
 	"SimpleServer/internal/controller"
-	v1 "SimpleServer/internal/delivery/v1"
+	"SimpleServer/internal/delivery/v1"
 	"SimpleServer/internal/providers/cache"
 	"SimpleServer/internal/providers/db"
-	"SimpleServer/pkg/usersService"
+	"SimpleServer/internal/services/employmentService"
+	"SimpleServer/pkg/userService"
+	"fmt"
 	"google.golang.org/grpc"
+	"log"
 	"net"
 	"time"
 )
@@ -23,19 +26,25 @@ const (
 func RunGRPCServer() error {
 
 	// configuration for server
+	time.Sleep(time.Second * 0)
+	fmt.Println("Server is working")
 	dataBase, err := db.NewDB(host, user, password, dbName, driverName, port)
 	if err != nil {
 		return err
 	}
-	newCache := cache.NewCache(time.Minute*10, time.Minute*2, false, dataBase, time.Minute*2)
-	newController := controller.NewController(newCache)
-	server := v1.NewGrpcServer(newController)
+	currentCache := cache.NewCache(time.Second*30, time.Minute*0, dataBase)
+	client, err := employmentService.Init("localhost:8082")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	cnt := controller.NewController(currentCache)
+	server := v1.NewGrpcServer(cnt, client)
 	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		return err
 	}
 	grpcSrv := grpc.NewServer()
-	usersService.RegisterUserCenterServer(grpcSrv, server)
+	userService.RegisterUserServiceServer(grpcSrv, server)
 
 	err = grpcSrv.Serve(lis)
 	if err != nil {
