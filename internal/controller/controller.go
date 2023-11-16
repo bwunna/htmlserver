@@ -3,50 +3,36 @@ package controller
 import (
 	"SimpleServer/internal/models"
 	"SimpleServer/internal/providers/cache"
-	"SimpleServer/pkg/usersService"
-	"fmt"
-	"time"
+	"SimpleServer/pkg/userService"
 )
 
 type Controller struct {
 	cache *cache.Cache
 }
 
+// controller constructor
+
 func NewController(cache *cache.Cache) *Controller {
-	// constructor for controller
 	return &Controller{cache: cache}
 }
 
-func (c *Controller) UpdateSalary(name string) error {
-	// updating salary for user
-	err := c.cache.AskForPromotion(name)
-	if err != nil {
-		return err
-	}
+// sending request to cache to get info about employee
 
-	return nil
-
-}
-
-func (c *Controller) GetUser(name string) (string, error) {
+func (c *Controller) GetEmployeeByEmail(email string) (*userService.Employee, error) {
 	// checking if user exists
-	userData, err := c.cache.Get(name)
+	info, err := c.cache.GetEmployeeInfoByEmail(email)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	salaryData, err := c.cache.GetSalaryData(name)
-	if err != nil {
-		return "", err
-	}
-	info := fmt.Sprint(*userData, salaryData)
-
-	return info, nil
+	return models.ConvertToEmployeeResponse(info), nil
 }
 
-func (c *Controller) DeleteUser(name string) error {
+// sending request to cache to delete the employee
+
+func (c *Controller) DeleteEmployeeByEmail(email string) error {
 	// checking for valid key
-	err := c.cache.Delete(name)
+	err := c.cache.DeleteByEmail(email)
 	// checking for successful deleting
 	if err != nil {
 		return err
@@ -55,16 +41,12 @@ func (c *Controller) DeleteUser(name string) error {
 
 }
 
-func (c *Controller) AddUser(user *usersService.User) error {
-	// trying to add user to cache or update info about him
-	userToAdd := models.ConvertGrpcUserToModelsUser(user)
-	err := c.cache.Set(userToAdd, time.Minute*10)
+// sending request to cache to add employee info
+
+func (c *Controller) AddEmployeeInCache(employee *userService.Employee) error {
+	err := c.cache.Set(models.ConvertToEmployeeInfo(employee))
 	if err != nil {
-		// checking for errors while adding the user
-		if err = c.cache.Update(userToAdd); err != nil {
-			return err
-		}
+		return err
 	}
 	return nil
-
 }
