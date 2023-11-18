@@ -1,20 +1,18 @@
 package delivery
 
 import (
-	v1 "SimpleServer/internal/delivery/v1"
+	"SimpleServer/internal/controller"
+	"SimpleServer/internal/delivery/v1"
 	"SimpleServer/internal/providers/cache"
 	"SimpleServer/internal/providers/db"
-	"SimpleServer/pkg/usersService"
+	"SimpleServer/internal/services/employmentService"
+	"SimpleServer/pkg/userService"
 	"fmt"
 	"google.golang.org/grpc"
+	"log"
 	"net"
 	"time"
 )
-
-// В данном файле должна быть структура данного сервиса
-// КОНСТРУКТОР
-// фукнция запуска сервиса
-//
 
 const (
 	host       = "localhost"
@@ -26,28 +24,31 @@ const (
 )
 
 func RunGRPCServer() error {
+
+	// configuration for server
+	time.Sleep(time.Second * 0)
+	fmt.Println("Server is working")
 	dataBase, err := db.NewDB(host, user, password, dbName, driverName, port)
 	if err != nil {
-		return fmt.Errorf("бд")
+		return err
 	}
-	newCache := cache.NewCache(time.Minute*10, time.Minute*2, false, dataBase, time.Minute*2)
-	server := v1.NewGrpcServer(newCache)
-
+	currentCache := cache.NewCache(time.Second*30, time.Minute*0, dataBase)
+	client, err := employmentService.Init("localhost:8082")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	cnt := controller.New(currentCache)
+	server := v1.NewGrpcServer(cnt, client)
 	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		return err
 	}
 	grpcSrv := grpc.NewServer()
-	usersService.RegisterUserCenterServer(grpcSrv, server)
+	userService.RegisterUserServiceServer(grpcSrv, server)
 
 	err = grpcSrv.Serve(lis)
 	if err != nil {
-		return fmt.Errorf("сёрв")
+		return err
 	}
 	return nil
 }
-
-//func CreateAndRunUserCenter(address string, defaultExpiration time.Duration, cleanUpInterval time.Duration, endlessLifeTimeAvailability bool, db *Provider.DataBase, promotionInterval time.Duration) *v1.Server {
-//	return nil
-//
-//}

@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+
+option go_package = "./pkg/userService";
+
+
+message Basic {
+  string message = 1;
+  int32 code = 2;
+}
+
+
+message EmailRequest{
+  string email = 1;
+}
+
+
+
+message Employee{
+  string name = 1;
+  string email = 2;
+  string status = 3;
+  int32 salary = 4;
+  string companyName = 5;
+  string departmentName = 6;
+
+
+}
+
+
+
+
+service UserService{
+  rpc GetEmployeeByEmail(EmailRequest) returns (Employee){
+    option (google.api.http) = {
+      get: "/user-service/api/get-employee-by-email"
+    };
+  }
+  rpc AddEmployee(Employee) returns (Basic){
+
+    option (google.api.http) = {
+      post: "/user-service/api/add-employee"
+    };
+  }
+  rpc DeleteEmployeeByEmail(EmailRequest) returns (Basic){
+    option (google.api.http) = {
+      delete: "/user-service/api/delete-employee-by-email"
+    };
+  }
+}
