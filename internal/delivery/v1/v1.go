@@ -17,9 +17,15 @@ type Server struct {
 func (s Server) AddEmployee(_ context.Context, employee *userService.Employee) (*userService.Basic, error) {
 	err := s.cnt.AddEmployeeInCache(employee)
 	if err != nil {
-		return &userService.Basic{Code: codeBAD, Message: err.Error()}, err
+		return &userService.Basic{
+			Code:    codeBAD,
+			Message: err.Error(),
+		}, err
 	}
-	return &userService.Basic{Code: codeOK, Message: MessageOK}, nil
+	return &userService.Basic{
+		Code:    codeOK,
+		Message: MessageOK,
+	}, nil
 }
 
 // constructor for service api
@@ -60,5 +66,8 @@ func (s Server) DeleteEmployeeByEmail(_ context.Context, request *userService.Em
 		return &userService.Basic{Code: codeBAD, Message: err.Error()}, err
 	}
 
-	return &userService.Basic{Code: codeOK, Message: MessageOK}, nil
+	return &userService.Basic{
+		Code:    codeOK,
+		Message: MessageOK,
+	}, nil
 }

@@ -35,7 +35,6 @@ func NewDB(host, user, password, nameOfDB, driverName string, port int) (*DataBa
 // adding employee in db
 
 func (base *DataBase) InsertEmployee(info models.EmployeeInfo) error {
-	// insert in db
 	var queryString string
 	if info.Status == "" {
 		queryString = fmt.Sprintf(`insert into cache_employee (email, emp_name)
@@ -55,13 +54,9 @@ func (base *DataBase) InsertEmployee(info models.EmployeeInfo) error {
 // deleting employee by his email
 
 func (base *DataBase) DeleteByEmail(emails []string) error {
-	// delete from db using where in(names...)
-
 	queryString := fmt.Sprintf("DELETE FROM cache_employee WHERE email in (%s);", KeysInString(emails))
-	if _, err := base.db.Query(queryString); err != nil {
-		return err
-	}
-	return nil
+	_, err := base.db.Query(queryString)
+	return err
 
 }
 
@@ -113,9 +108,6 @@ func (base *DataBase) UpdateEmployeeInfo(info *models.EmployeeInfo) error {
 	queryString := fmt.Sprintf(`update cache_employee set current_status = '%s', dep_name = '%s', company_name = '%s',
 		salary = %d`, info.Status, info.DepartmentName, info.CompanyName, info.Salary)
 	_, err := base.db.Query(queryString)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 
 }

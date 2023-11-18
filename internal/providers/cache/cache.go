@@ -75,7 +75,6 @@ func (c *Cache) DeleteByEmail(email string) error {
 func (c *Cache) garbageCollector() {
 	<-time.After(c.cleanUpInterval)
 	for {
-		// initializing map if it is nil
 		c.updateMap()
 		// if expired items exist, delete them
 		if keys := c.expiredKeys(); len(keys) != 0 {
@@ -89,18 +88,14 @@ func (c *Cache) garbageCollector() {
 
 }
 
-// sending request to db to get information about employee
-
 func (c *Cache) GetEmployeeInfoByEmail(email string) (*models.EmployeeInfo, error) {
 	c.RLock()
 	defer c.RUnlock()
 	item, ok := c.items[email]
-	//  if item was not found
 	if !ok {
 		return nil, fmt.Errorf("user with email %v was not found", email)
 
 	}
-	//  if item is expired
 	if time.Now().Compare(item.Expiration) == 1 {
 		return nil, fmt.Errorf("user with email %v is not available", email)
 	}
@@ -150,14 +145,11 @@ func (c *Cache) Set(info *models.EmployeeInfo) error {
 	return nil
 }
 
-// sending request to db to update employee info
-
 func (c *Cache) update(info *models.EmployeeInfo) error {
 	c.Lock()
 	defer c.Unlock()
 	key := info.Email
 	_, ok := c.items[key]
-	// updates info about info
 	if !ok {
 		defer log.Fatal("internal error")
 		return fmt.Errorf("internal error")

@@ -37,7 +37,7 @@ func RunGRPCServer() error {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	cnt := controller.NewController(currentCache)
+	cnt := controller.New(currentCache)
 	server := v1.NewGrpcServer(cnt, client)
 	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
